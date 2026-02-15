@@ -1,28 +1,28 @@
-# � Dialectic
+# Dialectic
 
 **AI-Powered Dependency Manager with Dual-Perspective Analysis**
 
 Built for the **2Fast2MCP** hackathon by Archestra AI.
 
-## 🎯 The Problem
+## The Problem
 
 Your `package.json` has 347 dependencies. 89 have security vulnerabilities. 23 are deprecated. Updating one breaks 5 others.
 
-## 💡 The Solution
+## The Solution
 
 Dialectic uses an AI agent with dual-perspective analysis to safely manage your dependencies:
 
 - **🔍 Audit**: Scans for vulnerabilities, deprecated packages, and outdated dependencies
-- **📋 Plan**: Proposes safe upgrade paths with CVE fixes
-- **🤖 Dual-Perspective Risk Assessment**:
+- **Plan**: Proposes safe upgrade paths with CVE fixes
+- **Dual-Perspective Risk Assessment**:
   - **Optimistic View**: Identifies benefits, security improvements, and safety
   - **Pessimistic View**: Identifies risks, breaking changes, and concerns
   - Synthesizes balanced analysis from both perspectives
-- **🧪 Test**: Automatically runs tests after upgrades
-- **↩️ Rollback**: Auto-reverts on test failures
-- **✅ Human Approval**: You approve risky upgrades via Archestra UI
+- **Test**: Automatically runs tests after upgrades
+- **Rollback**: Auto-reverts on test failures
+- **Human Approval**: You approve risky upgrades via Archestra UI
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -42,7 +42,7 @@ Dialectic uses an AI agent with dual-perspective analysis to safely manage your 
 └─────────────────────────────────────────────────────────────┘
 ```
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -141,7 +141,6 @@ pnpm test:tools
 
 - [Archestra Platform](https://archestra.ai/docs)
 - [MCP Specification](https://modelcontextprotocol.io)
-- [Architecture Deep Dive](./docs/ARCHITECTURE.md) (coming soon)
 
 ## 🏆 Built For
 
