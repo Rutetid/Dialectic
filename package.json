@@ -1,0 +1,50 @@
+{
+  "name": "dialectic",
+  "version": "0.1.0",
+  "description": "AI-powered dependency manager with multi-agent risk assessment for 2Fast2MCP hackathon",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "dialectic": "./dist/index.js"
+  },
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "test": "vitest",
+    "test:tools": "vitest run --testPathPattern=tools",
+    "lint": "eslint src --ext .ts",
+    "format": "prettier --write 'src/**/*.ts'"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "archestra",
+    "dependency-manager",
+    "security",
+    "ai-agents",
+    "2fast2mcp"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "latest",
+    "chalk": "^5.3.0",
+    "dotenv": "^17.3.1",
+    "execa": "^9.5.2",
+    "semver": "^7.6.3",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.11",
+    "@types/semver": "^7.5.8",
+    "eslint": "^9.17.0",
+    "prettier": "^3.4.2",
+    "tsx": "^4.21.0",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
