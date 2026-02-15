@@ -33,8 +33,17 @@ export async function suggestUpgrades(input: {
   const { auditResult: auditResultJson, strategy = "balanced" } = input;
   
   console.error("📋 Generating upgrade plan with strategy:", strategy);
+  console.error("📋 Audit result length:", auditResultJson?.length || 0);
   
-  const auditResult: AuditResult = JSON.parse(auditResultJson);
+  let auditResult: AuditResult;
+  try {
+    auditResult = JSON.parse(auditResultJson);
+  } catch (error) {
+    console.error("❌ Failed to parse audit result JSON:", error);
+    console.error("📋 Audit result preview:", auditResultJson?.substring(0, 500));
+    throw new Error(`Invalid audit result JSON: ${error instanceof Error ? error.message : String(error)}`);
+  }
+  
   const proposals: UpgradeProposal[] = [];
   
   for (const vuln of auditResult.vulnerabilities) {
@@ -102,6 +111,11 @@ function extractTargetVersion(patchedVersions: string, currentVersion: string): 
   // ">=4.17.21" -> "4.17.21"
   // "4.17.21" -> "4.17.21"
   // "^4.17.21" -> "4.17.21"
+  
+  if (!patchedVersions || typeof patchedVersions !== 'string') {
+    console.error(`⚠️  Invalid patchedVersions: ${JSON.stringify(patchedVersions)}`);
+    return null;
+  }
   
   const versionMatch = patchedVersions.match(/(\d+\.\d+\.\d+)/);
   if (versionMatch) {

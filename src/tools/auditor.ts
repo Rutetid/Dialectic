@@ -13,6 +13,18 @@ import type {
   PackageManager,
 } from "../types/index.js";
 
+// Sanitize string to ensure it's JSON-safe
+function sanitizeString(value: any): string {
+  if (typeof value !== 'string') {
+    return String(value || '');
+  }
+  // Remove control characters and normalize whitespace
+  return value
+    .replace(/[\x00-\x1F\x7F]/g, '') // Remove control characters
+    .replace(/\s+/g, ' ') // Normalize whitespace
+    .trim();
+}
+
 export async function detectPackageManager(projectPath: string): Promise<PackageManager> {
   const lockFiles = {
     "pnpm-lock.yaml": "pnpm" as const,
@@ -49,16 +61,21 @@ async function runNpmAudit(projectPath: string): Promise<{
         if (vuln.via && Array.isArray(vuln.via)) {
           for (const via of vuln.via) {
             if (typeof via === "object" && via.source) {
+              let patchedVersions = "unknown";
+              if (vuln.fixAvailable && typeof vuln.fixAvailable === 'object' && vuln.fixAvailable.version) {
+                patchedVersions = String(vuln.fixAvailable.version);
+              }
+              
               vulnerabilities.push({
-                id: via.source.toString(),
+                id: sanitizeString(via.source),
                 severity: vuln.severity || "medium",
-                title: via.title || `Vulnerability in ${pkgName}`,
-                description: via.url || "",
-                package: pkgName,
-                currentVersion: vuln.range || "unknown",
-                patchedVersions: vuln.fixAvailable?.version || "unknown",
-                vulnerableVersions: vuln.range || "unknown",
-                url: via.url,
+                title: sanitizeString(via.title || `Vulnerability in ${pkgName}`),
+                description: sanitizeString(via.url || ""),
+                package: sanitizeString(pkgName),
+                currentVersion: sanitizeString(vuln.range || "unknown"),
+                patchedVersions: sanitizeString(patchedVersions),
+                vulnerableVersions: sanitizeString(vuln.range || "unknown"),
+                url: sanitizeString(via.url || ""),
               });
             }
           }
@@ -92,15 +109,15 @@ async function runPnpmAudit(projectPath: string): Promise<{
     if (auditData.advisories) {
       for (const [id, advisory] of Object.entries<any>(auditData.advisories)) {
         vulnerabilities.push({
-          id: id.toString(),
+          id: sanitizeString(id),
           severity: advisory.severity || "medium",
-          title: advisory.title || "Vulnerability",
-          description: advisory.overview || "",
-          package: advisory.module_name || "unknown",
-          currentVersion: advisory.vulnerable_versions || "unknown",
-          patchedVersions: advisory.patched_versions || "unknown",
-          vulnerableVersions: advisory.vulnerable_versions || "unknown",
-          url: advisory.url,
+          title: sanitizeString(advisory.title || "Vulnerability"),
+          description: sanitizeString(advisory.overview || ""),
+          package: sanitizeString(advisory.module_name || "unknown"),
+          currentVersion: sanitizeString(advisory.vulnerable_versions || "unknown"),
+          patchedVersions: sanitizeString(advisory.patched_versions || "unknown"),
+          vulnerableVersions: sanitizeString(advisory.vulnerable_versions || "unknown"),
+          url: sanitizeString(advisory.url || ""),
         });
       }
     }
@@ -139,10 +156,10 @@ async function findDeprecatedPackages(projectPath: string): Promise<DeprecatedPa
         
         if (pkgInfo.deprecated) {
           deprecated.push({
-            name,
-            version: version.replace(/^[\^~]/, ""),
-            reason: pkgInfo.deprecated,
-            replacement: extractReplacement(pkgInfo.deprecated),
+            name: sanitizeString(name),
+            version: sanitizeString(version.replace(/^[\^~]/, "")),
+            reason: sanitizeString(pkgInfo.deprecated),
+            replacement: sanitizeString(extractReplacement(pkgInfo.deprecated)),
           });
         }
       } catch {
@@ -193,10 +210,10 @@ async function findOutdatedPackages(
 
     for (const [name, info] of Object.entries<any>(outdatedData)) {
       outdated.push({
-        name,
-        current: info.current || "unknown",
-        wanted: info.wanted || info.current || "unknown",
-        latest: info.latest || "unknown",
+        name: sanitizeString(name),
+        current: sanitizeString(info.current || "unknown"),
+        wanted: sanitizeString(info.wanted || info.current || "unknown"),
+        latest: sanitizeString(info.latest || "unknown"),
         type: info.type || "dependencies",
       });
     }

@@ -31,9 +31,10 @@ export async function runTests(input: {
   testCommand?: string;
   timeout?: number;
 }): Promise<TestResult> {
-  const { projectPath, testCommand: customCommand, timeout = 300000 } = input;
+  const { projectPath, testCommand: customCommand, timeout = 15000 } = input; // 15 seconds to stay under MCP timeout
   
   console.error("🧪 Running test suite...");
+  console.error(`⏱️  Timeout: ${timeout / 1000}s (MCP requests timeout around 20s)`);
   
   let testCommand = customCommand;
   if (!testCommand) {
@@ -50,6 +51,8 @@ export async function runTests(input: {
     }
     testCommand = detectedCommand;
   }
+  
+  console.error(`🚀 Running: ${testCommand}`);
   
   const packageManager = await detectPackageManager(projectPath);
 
@@ -89,6 +92,21 @@ export async function runTests(input: {
     };
   } catch (error: any) {
     const duration = Date.now() - startTime;
+    
+    if (error.message?.includes('timed out') || error.timedOut) {
+      console.error(`⏱️ Tests timed out after ${duration}ms`);
+      return {
+        passed: 0,
+        failed: 0,
+        total: 0,
+        duration,
+        exitCode: -1,
+        stderr: `Test execution timed out after ${timeout / 1000}s. Tests may be too slow or hanging. Try:\n` +
+                `1. Increase timeout parameter\n` +
+                `2. Run tests directly: cd ${projectPath} && npm test\n` +
+                `3. Check for hanging async operations or infinite loops`,
+      };
+    }
     
     console.error("❌ Test execution failed:", error.message);
     

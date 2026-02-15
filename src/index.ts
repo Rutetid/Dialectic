@@ -91,6 +91,8 @@ server.registerTool(
       "Executes project test suite and returns detailed results. " +
       "Detects test framework automatically (Jest, Vitest, Mocha, etc.). " +
       "Captures exit codes, stdout/stderr, and individual test failures. " +
+      "Default timeout: 15s (MCP requests timeout around 20s). " +
+      "For longer test suites, increase timeout parameter or run tests separately. " +
       "Use this after applying upgrades to validate changes.",
     inputSchema: RunTestsInputSchema,
   },
