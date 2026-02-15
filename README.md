@@ -1,6 +1,6 @@
 # � Dialectic
 
-**AI-Powered Dependency Manager with Dual-LLM Risk Assessment**
+**AI-Powered Dependency Manager with Dual-Perspective Analysis**
 
 Built for the **2Fast2MCP** hackathon by Archestra AI.
 
@@ -14,10 +14,10 @@ Dialectic uses an AI agent with dual-perspective analysis to safely manage your 
 
 - **🔍 Audit**: Scans for vulnerabilities, deprecated packages, and outdated dependencies
 - **📋 Plan**: Proposes safe upgrade paths with CVE fixes
-- **🤖 Dual-LLM Risk Assessment**:
-  - **Optimist LLM**: Your choice (Claude/GPT-4/Gemini) argues for upgrade safety
-  - **Pessimist LLM**: Zhipu AI identifies risks and breaking changes
-  - Synthesizes balanced risk scores from genuinely different perspectives
+- **🤖 Dual-Perspective Risk Assessment**:
+  - **Optimistic View**: Identifies benefits, security improvements, and safety
+  - **Pessimistic View**: Identifies risks, breaking changes, and concerns
+  - Synthesizes balanced analysis from both perspectives
 - **🧪 Test**: Automatically runs tests after upgrades
 - **↩️ Rollback**: Auto-reverts on test failures
 - **✅ Human Approval**: You approve risky upgrades via Archestra UI
@@ -68,21 +68,11 @@ docker run -p 9000:9000 -p 3000:3000 \
    archestra/platform
 ```
 
-### 3. Configure API Keys
+### 3. Build the MCP Server
 
 ```bash
-# Copy environment template
-cp .env.example .env
-
-# Edit .env and add:
-# - ZHIPU_API_KEY (required for Pessimist)
-# - ANTHROPIC_API_KEY or OPENAI_API_KEY or GOOGLE_API_KEY (for Optimist)
-nano .env
+pnpm build
 ```
-
-**Get API Keys:**
-- Zhipu AI: https://open.bigmodel.cn/ (free tier available)
-- Choose one: Anthropic, OpenAI, or Google for Optimist
 
 ### 4. Run Dialectic MCP Server
 
@@ -116,10 +106,10 @@ Scan my project at /path/to/myproject for vulnerabilities and suggest safe upgra
 The automated workflow:
 1. Audits dependencies for vulnerabilities
 2. Generates upgrade proposals  
-3. **Dual-LLM Risk Assessment**:
-   - Optimist LLM (your configured provider) argues for safety
-   - Pessimist LLM (Zhipu AI) identifies risks
-   - Tool synthesizes both into balanced risk score
+3. **Dual-Perspective Risk Assessment**:
+   - Analyzes benefits and improvements (optimistic view)
+   - Analyzes risks and concerns (pessimistic view)
+   - Synthesizes both into balanced recommendation
 4. Presents assessment and asks for approval
 5. Applies approved upgrades
 6. Runs tests automatically

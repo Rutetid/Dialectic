@@ -39,6 +39,9 @@ tmp/
 temp/
 *.tmp
 
+# Backup directory
+.dialectic-backup/
+
 # Lock files (keep package-lock.json for demo)
 # Uncomment if needed:
 # package-lock.json

@@ -205,6 +205,7 @@ export const ApplyUpgradeInputSchema = z.object({
   version: z.string(),
   packageManager: z.enum(["npm", "pnpm", "yarn", "auto"]).default("auto"),
   createBackup: z.boolean().default(true),
+  skipInstall: z.boolean().default(false).describe("Skip running npm/pnpm install after updating package.json (faster for MCP, but requires manual install)"),
 });
 
 export const RollbackChangesInputSchema = z.object({

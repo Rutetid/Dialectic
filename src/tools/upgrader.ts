@@ -4,19 +4,22 @@
  */
 
 import { execa } from "execa";
-import { readFile, writeFile, copyFile } from "fs/promises";
+import { readFile, writeFile, copyFile, mkdir } from "fs/promises";
 import { join } from "path";
 import { detectPackageManager } from "./auditor.js";
 
 async function createBackup(projectPath: string): Promise<void> {
   const packageJsonPath = join(projectPath, "package.json");
-  const backupPath = join(projectPath, ".dialectic-backup", `package.json.${Date.now()}.bak`);
+  const backupDir = join(projectPath, ".dialectic-backup");
+  const backupPath = join(backupDir, `package.json.${Date.now()}.bak`);
   
   try {
+    await mkdir(backupDir, { recursive: true });
+    
     await copyFile(packageJsonPath, backupPath);
     console.error(`📦 Backup created: ${backupPath}`);
   } catch (error) {
-    console.error("Failed to create backup:", error);
+    console.error("❌ Failed to create backup:", error);
     throw new Error("Could not create backup before upgrade");
   }
 }
@@ -58,11 +61,15 @@ async function installDependencies(
   try {
     await execa(packageManager, ["install"], {
       cwd: projectPath,
-      timeout: 300000, // 5 minutes
+      timeout: 15000, // 15 seconds to stay under MCP 20s limit
     });
     
     console.error("✅ Dependencies installed successfully");
-  } catch (error) {
+  } catch (error: any) {
+    if (error.killed && error.timedOut) {
+      console.error("⏱️  Install timed out after 15s - MCP limit exceeded");
+      throw new Error("Install timed out. Please run manually: " + packageManager + " install");
+    }
     console.error("Failed to install dependencies:", error);
     throw new Error("Dependency installation failed");
   }
@@ -75,6 +82,7 @@ export async function applyUpgrade(input: {
   version: string;
   packageManager?: "npm" | "pnpm" | "yarn" | "auto";
   createBackup?: boolean;
+  skipInstall?: boolean;
 }): Promise<{
   success: boolean;
   upgradeId: string;
@@ -90,6 +98,7 @@ export async function applyUpgrade(input: {
     version,
     packageManager: requestedPM = "auto",
     createBackup: shouldBackup = true,
+    skipInstall = false,
   } = input;
   
   console.error(`⚙️  Applying upgrade: ${packageName}@${version}`);
@@ -105,6 +114,18 @@ export async function applyUpgrade(input: {
 
     await updatePackageJson(projectPath, packageName, version);
     
+    if (skipInstall) {
+      console.error(`✅ Upgrade applied successfully (fast mode)!`);
+      
+      return {
+        success: true,
+        upgradeId,
+        package: packageName,
+        version,
+        message: `Successfully upgraded ${packageName} to ${version}`,
+        appliedAt: new Date().toISOString(),
+      };
+    }
 
     await installDependencies(projectPath, packageManager);
     

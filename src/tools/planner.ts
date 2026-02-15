@@ -35,18 +35,32 @@ export async function suggestUpgrades(input: {
   console.error("📋 Generating upgrade plan with strategy:", strategy);
   console.error("📋 Audit result length:", auditResultJson?.length || 0);
   
+  // Sanitize JSON string to remove control characters
+  const sanitizedJson = auditResultJson
+    .replace(/[\x00-\x1F\x7F]/g, '') // Remove control characters
+    .replace(/\\n/g, ' ')            // Replace escaped newlines
+    .replace(/\\r/g, ' ')            // Replace escaped carriage returns
+    .replace(/\\t/g, ' ')            // Replace escaped tabs
+    .replace(/\s+/g, ' ');           // Normalize whitespace
+  
   let auditResult: AuditResult;
   try {
-    auditResult = JSON.parse(auditResultJson);
+    auditResult = JSON.parse(sanitizedJson);
   } catch (error) {
     console.error("❌ Failed to parse audit result JSON:", error);
-    console.error("📋 Audit result preview:", auditResultJson?.substring(0, 500));
+    console.error("📋 Original length:", auditResultJson?.length);
+    console.error("📋 Sanitized length:", sanitizedJson?.length);
+    console.error("📋 Error position:", (error as any).message);
+    console.error("📋 Around error position:", sanitizedJson?.substring(5000, 5100));
     throw new Error(`Invalid audit result JSON: ${error instanceof Error ? error.message : String(error)}`);
   }
   
   const proposals: UpgradeProposal[] = [];
   
-  for (const vuln of auditResult.vulnerabilities) {
+  // Ensure vulnerabilities is an array
+  const vulnerabilities = Array.isArray(auditResult.vulnerabilities) ? auditResult.vulnerabilities : [];
+  
+  for (const vuln of vulnerabilities) {
     const packageName = vuln.package;
     const currentVersion = vuln.currentVersion;
     const patchedVersion = vuln.patchedVersions;
@@ -79,9 +93,10 @@ export async function suggestUpgrades(input: {
     }
   }
   
+  // Ensure outdated is an array
+  const outdatedPackages = Array.isArray(auditResult.outdated) ? auditResult.outdated : [];
   
-  
-  for (const outdated of auditResult.outdated) {
+  for (const outdated of outdatedPackages) {
     if (proposals.some((p) => p.package === outdated.name)) {
       continue;
     }
