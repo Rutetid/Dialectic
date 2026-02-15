@@ -12,7 +12,7 @@ Your `package.json` has 347 dependencies. 89 have security vulnerabilities. 23 a
 
 Dialectic uses an AI agent with dual-perspective analysis to safely manage your dependencies:
 
-- **🔍 Audit**: Scans for vulnerabilities, deprecated packages, and outdated dependencies
+- **Audit**: Scans for vulnerabilities, deprecated packages, and outdated dependencies
 - **Plan**: Proposes safe upgrade paths with CVE fixes
 - **Dual-Perspective Risk Assessment**:
   - **Optimistic View**: Identifies benefits, security improvements, and safety
@@ -53,7 +53,7 @@ Dialectic uses an AI agent with dual-perspective analysis to safely manage your 
 ### 1. Install Dependencies
 
 ```bash
-pnpm install
+npm install
 ```
 
 ### 2. Start Archestra Platform
@@ -71,20 +71,20 @@ docker run -p 9000:9000 -p 3000:3000 \
 ### 3. Build the MCP Server
 
 ```bash
-pnpm build
+npm build
 ```
 
 ### 4. Run Dialectic MCP Server
 
 ```bash
-pnpm dev
+npx -y supergateway --port 8000 --baseUrl http://0.0.0.0:8000 --outputTransport streamableHttp --stdio "npx tsx src/index.ts"
 ```
 
 ### 5. Configure in Archestra
 
 1. Open http://localhost:3000
 2. Add your LLM API key in **Settings → LLM API Keys** (Claude, GPT-4, etc.)
-3. Go to **MCP Registry** → Add new server → Configure Dialectic
+3. Go to **MCP Registry** → Add new server → Configure Remote (orchestrated not by Archestra) →  add server url as http://{your-ip}:8000/mcp 
 4. Go to **Agents** → Create "Dialectic Coordinator" agent
 5. Enable all 6 tools:
    - `audit_dependencies`
@@ -117,7 +117,7 @@ The automated workflow:
 
 ## 🎬 Demo
 
-See `demo/vulnerable-app/` for a demo project with:
+Check [This](https://github.com/Rutetid/demo-vulnerable-app) for a demo project with:
 - lodash 4.17.19 (CVE-2021-23337) → upgrades cleanly
 - React 17 → 18 → breaks tests → auto-rollback
 
