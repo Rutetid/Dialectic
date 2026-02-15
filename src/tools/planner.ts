@@ -54,12 +54,23 @@ export async function suggestUpgrades(input: {
     const targetVersion = extractTargetVersion(patchedVersion, currentVersion);
     
     if (targetVersion && targetVersion !== currentVersion) {
+      const upgradeType = getUpgradeType(currentVersion, targetVersion);
+      
+     
+      const violatesStrategy = 
+        (strategy === "conservative" && upgradeType !== "patch") ||
+        (strategy === "balanced" && upgradeType === "major");
+      
+      if (violatesStrategy) {
+        console.error(`⚠️  Security fix for ${packageName} requires ${upgradeType} upgrade (${currentVersion} → ${targetVersion}), but strategy is ${strategy}`);
+      }
+      
       proposals.push({
         id: `upgrade-${packageName}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         package: packageName,
         from: currentVersion,
         to: targetVersion,
-        type: getUpgradeType(currentVersion, targetVersion),
+        type: upgradeType,
         fixes: [vuln.id],
         dependents: [], 
         changelogUrl: `https://github.com/${packageName}/blob/main/CHANGELOG.md`,
@@ -67,6 +78,8 @@ export async function suggestUpgrades(input: {
       });
     }
   }
+  
+  
   
   for (const outdated of auditResult.outdated) {
     if (proposals.some((p) => p.package === outdated.name)) {
@@ -107,32 +120,56 @@ export async function suggestUpgrades(input: {
 }
 
 function extractTargetVersion(patchedVersions: string, currentVersion: string): string | null {
-  // Common patterns in patched versions:
-  // ">=4.17.21" -> "4.17.21"
-  // "4.17.21" -> "4.17.21"
-  // "^4.17.21" -> "4.17.21"
+  // Handle array input (sometimes npm audit returns arrays)
+  if (Array.isArray(patchedVersions)) {
+    patchedVersions = patchedVersions.join(' || ');
+  }
   
+
   if (!patchedVersions || typeof patchedVersions !== 'string') {
     console.error(`⚠️  Invalid patchedVersions: ${JSON.stringify(patchedVersions)}`);
     return null;
   }
   
-  const versionMatch = patchedVersions.match(/(\d+\.\d+\.\d+)/);
-  if (versionMatch) {
-    return versionMatch[1];
+  // Extract ALL version numbers from the patched versions string
+  const versionMatches = patchedVersions.match(/\d+\.\d+\.\d+/g);
+  
+  if (!versionMatches || versionMatches.length === 0) {
+    // No valid versions found, try incrementing current
+    try {
+      const parsed = semver.parse(currentVersion);
+      if (parsed) {
+        return semver.inc(currentVersion, "patch");
+      }
+    } catch {
+      // Ignore
+    }
+    return null;
   }
   
-  // If we can't parse, try to increment patch version
+  // Find the HIGHEST version from the matches
+  let bestVersion = versionMatches[0];
+  for (const version of versionMatches) {
+    try {
+      if (semver.gt(version, bestVersion)) {
+        bestVersion = version;
+      }
+    } catch {
+      // Skip invalid versions
+    }
+  }
+  
+ 
   try {
-    const parsed = semver.parse(currentVersion);
-    if (parsed) {
+    if (semver.lte(bestVersion, currentVersion)) {
+      console.error(`⚠️  Best patched version ${bestVersion} is not newer than current ${currentVersion}, incrementing patch`);
       return semver.inc(currentVersion, "patch");
     }
   } catch {
-    // Ignore
+    // If comparison fails, just return the best version we found
   }
   
-  return null;
+  return bestVersion;
 }
 
 function getUpgradeType(from: string, to: string): "major" | "minor" | "patch" {
